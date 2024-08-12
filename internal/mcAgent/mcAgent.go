@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/nihal-ramaswamy/easy21/internal/action"
+	"github.com/nihal-ramaswamy/easy21/internal/agent"
 	"github.com/nihal-ramaswamy/easy21/internal/environment"
 	"github.com/nihal-ramaswamy/easy21/internal/episode"
 	"github.com/nihal-ramaswamy/easy21/internal/state"
@@ -13,24 +14,30 @@ import (
 )
 
 type McAgent struct {
+	agent.Agent
+
 	Environment    *environment.Environment `json:"environment"`
 	N              [][][]float64            `json:"n"`
 	Q              [][][]float64            `json:"q"`
 	DiscountFactor float64                  `json:"discountFactor"`
-	No             float64                  `json:"no"`
+	E              float64                  `json:"e"`
 	wins           int
 	iterations     int
 }
 
-func NewMcAgent(discountFactor float64, no float64) *McAgent {
+func NewMcAgent(discountFactor, e float64) *McAgent {
 	env := environment.NewEnvironment()
 	return &McAgent{
 		Environment:    env,
 		N:              utils.Make3dArray(env.PlayerValueCount+1, env.DealerValueCount+1, env.ActionCount+1),
 		Q:              utils.Make3dArray(env.PlayerValueCount+1, env.DealerValueCount+1, env.ActionCount+1),
 		DiscountFactor: discountFactor,
-		No:             no,
+		E:              e,
 	}
+}
+
+func (m *McAgent) GetEnvironment() *environment.Environment {
+	return m.Environment
 }
 
 func (m *McAgent) ValueFunction() [][]float64 {
@@ -50,17 +57,9 @@ func (m *McAgent) ValueFunction() [][]float64 {
 	return v
 }
 
-func (m *McAgent) get_e(state *state.State) float64 {
-	s := 0.0
-	for i := 0; i < len(m.N[state.PlayerValue][state.DealerValue]); i++ {
-		s += m.N[state.PlayerValue][state.DealerValue][i]
-	}
-	return m.No / (m.No + s)
-}
-
 func (m *McAgent) Action(s *state.State) action.Action {
-	e := rand.Intn(2)
-	if e == 0 {
+	e := rand.Float64()
+	if e < m.E {
 		if rand.Intn(2) == 0 {
 			return action.Hit
 		} else {
