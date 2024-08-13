@@ -58,8 +58,9 @@ func (m *McAgent) ValueFunction() [][]float64 {
 }
 
 func (m *McAgent) Action(s *state.State) action.Action {
+	cnt := m.N[s.PlayerValue][s.DealerValue][action.Hit.ToInt()] + m.N[s.PlayerValue][s.DealerValue][action.Strike.ToInt()]
 	e := rand.Float64()
-	if e < m.E {
+	if e < (1.0 / cnt) {
 		if rand.Intn(2) == 0 {
 			return action.Hit
 		} else {
